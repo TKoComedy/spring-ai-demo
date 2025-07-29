@@ -1,0 +1,24 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: spring-ai-demo
+  devtools:
+    restart:
+      enabled: true
+    livereload:
+      enabled: true
+
+# OpenAI 配置
+openai:
+  api:
+    key: ${OPENAI_API_KEY:your-openai-api-key}
+  model: gpt-3.5-turbo
+
+# 日志配置
+logging:
+  level:
+    org.example: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n" 
