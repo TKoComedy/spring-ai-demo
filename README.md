@@ -89,7 +89,7 @@ Content-Type: application/json
 
 #### 流式聊天
 ```bash
-POST /api/streaming/chat
+POST /api/ai/chat
 Content-Type: application/json
 Accept: text/event-stream
 
@@ -100,7 +100,7 @@ Accept: text/event-stream
 
 #### 流式代码生成
 ```bash
-POST /api/streaming/generate-code
+POST /api/advanced-ai/generate-code
 Content-Type: application/json
 Accept: text/event-stream
 
@@ -112,7 +112,7 @@ Accept: text/event-stream
 
 #### 流式文档摘要
 ```bash
-POST /api/streaming/summarize
+POST /api/advanced-ai/summarize
 Content-Type: application/json
 Accept: text/event-stream
 
@@ -121,12 +121,37 @@ Accept: text/event-stream
 }
 ```
 
+#### 流式模板聊天
+```bash
+POST /api/advanced-ai/chat-template
+Content-Type: application/json
+Accept: text/event-stream
+
+{
+  "topic": "人工智能",
+  "style": "科普"
+}
+```
+
+#### 流式系统提示聊天
+```bash
+POST /api/advanced-ai/chat-with-system
+Content-Type: application/json
+Accept: text/event-stream
+
+{
+  "userMessage": "请帮我写一首诗",
+  "systemPrompt": "你是一个诗人"
+}
+```
+
 ### 高级功能
 
-#### 代码生成
+#### 代码生成（流式）
 ```bash
-POST /api/ai/advanced/code
+POST /api/advanced-ai/generate-code
 Content-Type: application/json
+Accept: text/event-stream
 
 {
   "requirement": "实现一个简单的计算器",
@@ -134,13 +159,38 @@ Content-Type: application/json
 }
 ```
 
-#### 文档摘要
+#### 文档摘要（流式）
 ```bash
-POST /api/ai/advanced/summarize
+POST /api/advanced-ai/summarize
 Content-Type: application/json
+Accept: text/event-stream
 
 {
   "content": "要摘要的文档内容..."
+}
+```
+
+#### 模板聊天（流式）
+```bash
+POST /api/advanced-ai/chat-template
+Content-Type: application/json
+Accept: text/event-stream
+
+{
+  "topic": "人工智能",
+  "style": "科普"
+}
+```
+
+#### 系统提示聊天（流式）
+```bash
+POST /api/advanced-ai/chat-with-system
+Content-Type: application/json
+Accept: text/event-stream
+
+{
+  "userMessage": "请帮我写一首诗",
+  "systemPrompt": "你是一个诗人"
 }
 ```
 

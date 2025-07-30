@@ -182,16 +182,8 @@
             
             output.textContent = '正在连接...\n';
             
-            const eventSource = new EventSource(`/api/streaming/chat`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ message: message })
-            });
-            
             // 使用fetch进行POST请求
-            fetch('/api/streaming/chat', {
+            fetch('/api/ai/chat', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -252,7 +244,7 @@
             
             output.textContent = '正在生成代码...\n';
             
-            fetch('/api/streaming/generate-code', {
+            fetch('/api/advanced-ai/generate-code', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -315,7 +307,7 @@
             
             output.textContent = '正在生成摘要...\n';
             
-            fetch('/api/streaming/summarize', {
+            fetch('/api/advanced-ai/summarize', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -1,8 +1,10 @@
 package org.example.controller;
 
-import org.example.service.AiService;
+import org.example.service.OllamaService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,29 +14,32 @@ import java.util.Map;
 public class AiChatController {
 
     @Autowired
-    private AiService aiService;
+    private OllamaService ollamaService;
 
-    @PostMapping("/chat")
-    public Map<String, String> chat(@RequestBody Map<String, String> request) {
-        try {
-            String message = request.get("message");
-            if (message == null || message.trim().isEmpty()) {
-                Map<String, String> error = new HashMap<>();
-                error.put("error", "消息不能为空");
-                return error;
-            }
-            
-            String aiReply = aiService.simpleChat(message);
-            
-            Map<String, String> result = new HashMap<>();
-            result.put("message", message);
-            result.put("response", aiReply);
-            return result;
-        } catch (Exception e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", "处理请求时发生错误: " + e.getMessage());
-            return error;
+    @PostMapping(value = "/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<String> chat(@RequestBody Map<String, String> request) {
+        String message = request.get("message");
+        
+        if (message == null || message.trim().isEmpty()) {
+            return Flux.just("data: {\"type\":\"error\",\"message\":\"消息不能为空\"}\n\n");
         }
+        
+        return Flux.create(sink -> {
+            try {
+                // 发送开始标记
+                sink.next("data: {\"type\":\"start\",\"message\":\"" + message + "\"}\n\n");
+                
+                // 调用Ollama的流式API
+                ollamaService.streamChat(message, sink);
+                
+                // 发送结束标记
+                sink.next("data: {\"type\":\"end\"}\n\n");
+                sink.complete();
+            } catch (Exception e) {
+                sink.next("data: {\"type\":\"error\",\"message\":\"" + e.getMessage() + "\"}\n\n");
+                sink.complete();
+            }
+        });
     }
 
     @GetMapping("/health")
