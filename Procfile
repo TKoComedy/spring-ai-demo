@@ -1,0 +1,1 @@
+web: java -jar target/spring-ai-demo-1.0-SNAPSHOT.jar 

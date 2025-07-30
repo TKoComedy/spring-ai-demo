@@ -1,102 +1,94 @@
-# Spring AI 学习项目
+# Spring AI Demo
 
-这是一个用于学习 Spring AI 框架的演示项目，包含了多种 AI 功能的实现示例。
+一个基于Spring Boot的AI聊天应用，使用Ollama本地大语言模型。
 
-## 🚀 项目特性
+## 技术栈
 
-- **智能聊天**: 与AI进行自然语言对话
-- **代码生成**: 根据需求自动生成高质量代码
-- **图像生成**: 根据文本描述生成精美图像
-- **文本嵌入**: 将文本转换为向量表示
-- **文档摘要**: 自动提取文档关键信息
-- **模板系统**: 灵活的提示模板管理
+- **Java**: 8
+- **Spring Boot**: 2.7.18
+- **Maven**: 3.8.1
+- **Ollama**: v0.1.29
+- **AI模型**: qwen:0.5b (千问0.5B参数模型)
 
-## 🛠️ 技术栈
+## 功能特性
 
-- **Spring Boot 3.2**: 主框架
-- **Spring AI 0.8**: AI集成框架
-- **Thymeleaf**: 模板引擎
-- **Bootstrap 5**: 前端UI框架
-- **Java 8**: 编程语言
+- ✅ AI聊天对话
+- ✅ 系统提示词支持
+- ✅ 模板化对话
+- ✅ 代码生成
+- ✅ 文档摘要
+- ✅ 图像描述生成
+- ✅ 文本嵌入（模拟）
+- ✅ 批量嵌入处理
+- ✅ 健康检查API
 
-## 📋 环境要求
+## 快速开始
 
-- Java 8 或更高版本
-- Maven 3.6 或更高版本
-- 可选的AI服务API密钥
+### 环境要求
 
-## 🔧 快速开始
+- Java 8+
+- Maven 3.6+
+- Ollama v0.1.29+
 
-### 1. 克隆项目
+### 1. 安装Ollama
 
-```bash
-git clone <your-repository-url>
-cd spring-ai-demo
-```
-
-### 2. 配置AI服务
-
-#### OpenAI (推荐)
-1. 获取 OpenAI API 密钥: https://platform.openai.com/api-keys
-2. 设置环境变量:
-```bash
-export OPENAI_API_KEY=your-api-key-here
-```
-
-#### Ollama (本地AI)
-1. 安装 Ollama: https://ollama.ai/
-2. 下载模型:
-```bash
-ollama pull llama2
-```
-
-#### Google Vertex AI
-1. 设置 Google Cloud 项目
-2. 配置认证
-3. 设置环境变量:
-```bash
-export GOOGLE_CLOUD_PROJECT_ID=your-project-id
-```
-
-### 3. 运行项目
+#### 下载兼容版本
+由于服务器环境限制，需要使用兼容的Ollama版本：
 
 ```bash
-mvn spring-boot:run
+# 下载v0.1.29版本（兼容CentOS 7）
+wget https://hk.gh-proxy.com/github.com/ollama/ollama/releases/download/v0.1.29/ollama-linux-amd64 -O /tmp/ollama
+chmod +x /tmp/ollama
+mv /tmp/ollama /usr/local/bin/ollama
 ```
 
-### 4. 访问应用
+#### 启动Ollama服务
+```bash
+ollama serve > /var/log/ollama.log 2>&1 &
+```
 
-打开浏览器访问: http://localhost:8080
+#### 下载模型
+```bash
+# 下载千问0.5B模型（推荐，支持中文，内存占用小）
+ollama pull qwen:0.5b
+```
 
-## 📖 功能说明
+### 2. 构建应用
 
-### 1. 基础聊天 (`/chat`)
-- 与AI进行简单的对话
-- 支持快捷问题按钮
-- 实时聊天界面
+```bash
+mvn clean package
+```
 
-### 2. 高级功能 (`/advanced`)
-- **代码生成**: 输入需求描述和编程语言，AI生成代码
-- **文档摘要**: 输入长文档，AI生成摘要
-- **图像生成**: 输入描述，AI生成图像
-- **文本嵌入**: 将文本转换为向量
-- **模板聊天**: 使用模板生成特定风格的内容
+### 3. 运行应用
 
-### 3. API接口
+```bash
+java -jar target/spring-ai-demo-1.0-SNAPSHOT.jar
+```
 
-#### 基础聊天
+应用将在 `http://localhost:8082` 启动。
+
+## API接口
+
+### 健康检查
+```bash
+GET /api/ai/health
+```
+
+### AI聊天
 ```bash
 POST /api/ai/chat
 Content-Type: application/json
 
 {
-  "message": "你好，请介绍一下Spring AI"
+  "message": "你好，请介绍一下自己"
 }
 ```
 
+### 高级功能
+
 #### 代码生成
 ```bash
-POST /api/advanced-ai/generate-code
+POST /api/ai/advanced/code
 Content-Type: application/json
 
 {
@@ -107,128 +99,123 @@ Content-Type: application/json
 
 #### 文档摘要
 ```bash
-POST /api/advanced-ai/summarize
+POST /api/ai/advanced/summarize
 Content-Type: application/json
 
 {
-  "content": "长文档内容..."
+  "content": "要摘要的文档内容..."
 }
 ```
 
-#### 图像生成
+#### 图像描述
 ```bash
-POST /api/advanced-ai/generate-image
+POST /api/ai/advanced/image
 Content-Type: application/json
 
 {
-  "prompt": "一只可爱的小猫在花园里玩耍"
+  "prompt": "一只可爱的小猫"
 }
 ```
 
-## 🏗️ 项目结构
+## 配置说明
 
-```
-src/
-├── main/
-│   ├── java/org/example/
-│   │   ├── Main.java                 # Spring Boot 主类
-│   │   ├── controller/
-│   │   │   ├── AiChatController.java     # 基础聊天控制器
-│   │   │   ├── AdvancedAiController.java # 高级功能控制器
-│   │   │   └── WebController.java        # Web页面控制器
-│   │   └── service/
-│   │       └── AiService.java            # AI服务类
-│   └── resources/
-│       ├── application.yml              # 配置文件
-│       └── templates/
-│           ├── index.html               # 主页
-│           ├── chat.html                # 聊天页面
-│           └── advanced.html            # 高级功能页面
-```
-
-## 🔍 学习要点
-
-### Spring AI 核心概念
-
-1. **ChatClient**: 聊天客户端，用于与AI模型对话
-2. **EmbeddingClient**: 嵌入客户端，用于文本向量化
-3. **ImageClient**: 图像客户端，用于图像生成
-4. **Prompt**: 提示对象，包含用户输入和系统提示
-5. **PromptTemplate**: 提示模板，支持变量替换
-
-### 配置说明
-
+### application.yml
 ```yaml
+server:
+  port: 8082
+
 spring:
-  ai:
-    openai:
-      api-key: ${OPENAI_API_KEY}
-      chat:
-        options:
-          model: gpt-3.5-turbo
-          temperature: 0.7
-          max-tokens: 1000
+  application:
+    name: spring-ai-demo
+
+# Ollama配置
+ollama:
+  base-url: http://localhost:11434
+  model: qwen:0.5b
+
+# 日志配置
+logging:
+  level:
+    org.example: DEBUG
 ```
 
-### 代码示例
-
-#### 基础聊天
-```java
-@Autowired
-private ChatClient chatClient;
-
-public String chat(String message) {
-    Prompt prompt = new Prompt(new UserMessage(message));
-    ChatResponse response = chatClient.call(prompt);
-    return response.getResult().getOutput().getContent();
-}
+### Maven配置
+```xml
+<properties>
+    <maven.compiler.source>8</maven.compiler.source>
+    <maven.compiler.target>8</maven.compiler.target>
+</properties>
 ```
 
-#### 带系统提示的聊天
-```java
-public String chatWithSystem(String userMessage, String systemPrompt) {
-    Message systemMessage = new SystemMessage(systemPrompt);
-    Message userMsg = new UserMessage(userMessage);
-    
-    Prompt prompt = new Prompt(List.of(systemMessage, userMsg));
-    ChatResponse response = chatClient.call(prompt);
-    return response.getResult().getOutput().getContent();
-}
+## 部署指南
+
+详细的服务器部署指南请参考 [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
+
+### 快速部署
+```bash
+# 上传部署脚本
+scp deploy.sh root@your-server:/tmp/
+scp target/spring-ai-demo-1.0-SNAPSHOT.jar root@your-server:/tmp/
+
+# 在服务器上执行
+ssh root@your-server
+chmod +x /tmp/deploy.sh
+/tmp/deploy.sh
 ```
 
-#### 使用模板
-```java
-String template = "请以{style}的风格，写一篇关于{topic}的文章。";
-PromptTemplate promptTemplate = new PromptTemplate(template);
-Prompt prompt = promptTemplate.create(Map.of("topic", "AI", "style", "专业"));
+## 故障排除
+
+### 常见问题
+
+1. **Ollama连接失败**
+   - 检查Ollama服务是否运行：`ps aux | grep ollama`
+   - 重启Ollama：`ollama serve > /var/log/ollama.log 2>&1 &`
+
+2. **模型加载失败**
+   - 检查模型是否存在：`ollama list`
+   - 重新下载模型：`ollama pull qwen:0.5b`
+
+3. **内存不足**
+   - 使用更小的模型：`qwen:0.5b` (394MB)
+   - 检查内存使用：`free -h`
+
+4. **端口冲突**
+   - 修改`application.yml`中的端口配置
+   - 检查端口占用：`netstat -tlnp | grep 8082`
+
+### 日志查看
+```bash
+# 应用日志
+journalctl -u spring-ai-demo -f
+
+# Ollama日志
+tail -f /var/log/ollama.log
 ```
 
-## 🐛 常见问题
+## 开发说明
 
-### 1. API密钥配置
-确保正确设置了环境变量或配置文件中的API密钥。
+### 项目结构
+```
+src/main/java/org/example/
+├── Main.java                 # 应用入口
+├── controller/
+│   ├── AiChatController.java     # 基础聊天控制器
+│   └── AdvancedAiController.java # 高级功能控制器
+└── service/
+    ├── AiService.java            # AI服务接口
+    └── OllamaService.java        # Ollama客户端
+```
 
-### 2. 网络连接
-某些AI服务可能需要网络代理，请确保网络连接正常。
+### 添加新功能
+1. 在`AiService`中添加新方法
+2. 在`OllamaService`中实现具体逻辑
+3. 在控制器中添加API接口
+4. 更新文档
 
-### 3. 模型可用性
-不同AI服务支持的模型可能不同，请参考官方文档。
+## 许可证
 
-## 📚 学习资源
+MIT License
 
-- [Spring AI 官方文档](https://docs.spring.io/spring-ai/reference/)
-- [Spring Boot 官方文档](https://spring.io/projects/spring-boot)
-- [OpenAI API 文档](https://platform.openai.com/docs)
-- [Ollama 文档](https://ollama.ai/docs)
+## 贡献
 
-## 🤝 贡献
-
-欢迎提交 Issue 和 Pull Request 来改进这个项目！
-
-## 📄 许可证
-
-本项目仅用于学习和演示目的。
-
----
-
-**注意**: 使用AI服务时请注意API使用限制和费用，建议在开发环境中使用适当的配额限制。 
+欢迎提交Issue和Pull Request！ 

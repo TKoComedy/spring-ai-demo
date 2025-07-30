@@ -16,13 +16,25 @@ public class AiChatController {
 
     @PostMapping("/chat")
     public Map<String, String> chat(@RequestBody Map<String, String> request) {
-        String message = request.get("message");
-        String aiReply = aiService.simpleChat(message);
-        
-        Map<String, String> result = new HashMap<>();
-        result.put("message", message);
-        result.put("response", aiReply);
-        return result;
+        try {
+            String message = request.get("message");
+            if (message == null || message.trim().isEmpty()) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "消息不能为空");
+                return error;
+            }
+            
+            String aiReply = aiService.simpleChat(message);
+            
+            Map<String, String> result = new HashMap<>();
+            result.put("message", message);
+            result.put("response", aiReply);
+            return result;
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "处理请求时发生错误: " + e.getMessage());
+            return error;
+        }
     }
 
     @GetMapping("/health")

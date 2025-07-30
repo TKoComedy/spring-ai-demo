@@ -1,146 +1,411 @@
-# Spring AI Demo 配置说明
+# Spring AI Demo 配置指南
 
-## 环境变量配置
+本指南详细说明Spring AI Demo应用的各种配置选项。
 
-在运行项目前，请设置以下环境变量：
+## 环境配置
 
-### OpenAI 配置 (推荐)
-
-```bash
-# Windows PowerShell
-$env:OPENAI_API_KEY="your-openai-api-key-here"
-
-# Windows CMD
-set OPENAI_API_KEY=your-openai-api-key-here
-
-# Linux/Mac
-export OPENAI_API_KEY=your-openai-api-key-here
-```
-
-### Google Cloud 配置 (可选)
+### Java环境
 
 ```bash
-# Windows PowerShell
-$env:GOOGLE_CLOUD_PROJECT_ID="your-google-cloud-project-id"
+# 检查Java版本（需要Java 8）
+java -version
 
-# Windows CMD
-set GOOGLE_CLOUD_PROJECT_ID=your-google-cloud-project-id
-
-# Linux/Mac
-export GOOGLE_CLOUD_PROJECT_ID=your-google-cloud-project-id
+# 设置JAVA_HOME（如果需要）
+export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk
+export PATH=$JAVA_HOME/bin:$PATH
 ```
 
-## 获取API密钥
+### Maven配置
 
-### OpenAI API密钥
+#### settings.xml
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 
+          http://maven.apache.org/xsd/settings-1.0.0.xsd">
+    
+    <!-- 本地仓库路径 -->
+    <localRepository>${user.home}/.m2/repository</localRepository>
+    
+    <!-- 阿里云Maven镜像 -->
+    <mirrors>
+        <mirror>
+            <id>aliyun</id>
+            <name>Aliyun Maven</name>
+            <url>https://maven.aliyun.com/repository/public</url>
+            <mirrorOf>*</mirrorOf>
+        </mirror>
+    </mirrors>
+    
+    <!-- Java 8 配置 -->
+    <profiles>
+        <profile>
+            <id>jdk-1.8</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+                <jdk>1.8</jdk>
+            </activation>
+            <properties>
+                <maven.compiler.source>1.8</maven.compiler.source>
+                <maven.compiler.target>1.8</maven.compiler.target>
+                <maven.compiler.compilerVersion>1.8</maven.compiler.compilerVersion>
+            </properties>
+        </profile>
+    </profiles>
+</settings>
+```
 
-1. 访问 [OpenAI Platform](https://platform.openai.com/)
-2. 注册或登录账户
-3. 进入 [API Keys](https://platform.openai.com/api-keys) 页面
-4. 点击 "Create new secret key"
-5. 复制生成的密钥
+## 应用配置
 
-### Google Cloud 项目ID
-
-1. 访问 [Google Cloud Console](https://console.cloud.google.com/)
-2. 创建新项目或选择现有项目
-3. 在项目概览页面找到项目ID
-4. 启用 Vertex AI API
-
-## 本地AI模型 (Ollama)
-
-如果你想使用本地AI模型，可以安装 Ollama：
-
-1. 访问 [Ollama](https://ollama.ai/) 下载安装
-2. 启动 Ollama 服务
-3. 下载模型：
-   ```bash
-   ollama pull llama2
-   ```
-
-## 配置文件说明
-
-项目使用 `application.yml` 进行配置，主要配置项包括：
+### application.yml
 
 ```yaml
+# 服务器配置
+server:
+  port: 8082                    # 应用端口
+  servlet:
+    context-path: /             # 上下文路径
+
+# Spring配置
 spring:
-  ai:
-    openai:
-      api-key: ${OPENAI_API_KEY:your-openai-api-key}
-      chat:
-        options:
-          model: gpt-3.5-turbo
-          temperature: 0.7
-          max-tokens: 1000
-    ollama:
-      base-url: http://localhost:11434
-      chat:
-        options:
-          model: llama2
+  application:
+    name: spring-ai-demo        # 应用名称
+  devtools:
+    restart:
+      enabled: true             # 开发模式自动重启
+    livereload:
+      enabled: true             # 热重载
+
+# Ollama配置
+ollama:
+  base-url: http://localhost:11434  # Ollama服务地址
+  model: qwen:0.5b                  # 使用的AI模型
+
+# 日志配置
+logging:
+  level:
+    org.example: DEBUG          # 应用包日志级别
+    org.springframework.web: INFO
+    org.springframework.ai: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/spring-ai-demo.log
+    max-size: 10MB
+    max-history: 30
+
+# 管理端点配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
 ```
 
-## 常见配置问题
-
-### 1. API密钥无效
-- 检查API密钥是否正确设置
-- 确认API密钥有足够的余额
-- 验证API密钥的权限设置
-
-### 2. 网络连接问题
-- 检查网络连接是否正常
-- 某些地区可能需要配置代理
-- 确认防火墙设置
-
-### 3. 模型不可用
-- 检查模型名称是否正确
-- 确认模型是否在对应服务中可用
-- 验证账户权限
-
-## 开发环境配置
-
-### IDE配置 (IntelliJ IDEA)
-
-1. 打开项目设置 (File > Settings)
-2. 进入 Build, Execution, Deployment > Build Tools > Maven
-3. 确保Maven配置正确
-4. 在运行配置中设置环境变量
-
-### 命令行运行
+### 环境变量配置
 
 ```bash
-# 设置环境变量并运行
-export OPENAI_API_KEY=your-key
-mvn spring-boot:run
-
-# 或者使用Maven profile
-mvn spring-boot:run -Dspring-boot.run.profiles=dev
+# 设置环境变量
+export OLLAMA_BASE_URL=http://localhost:11434
+export OLLAMA_MODEL=qwen:0.5b
+export SPRING_PROFILES_ACTIVE=prod
+export JAVA_OPTS="-Xmx1g -Xms512m"
 ```
 
-## 生产环境配置
+### 不同环境配置
 
-在生产环境中，建议：
-
-1. 使用环境变量而不是硬编码配置
-2. 设置适当的日志级别
-3. 配置监控和告警
-4. 使用HTTPS
-5. 设置API使用限制
-
+#### 开发环境 (application-dev.yml)
 ```yaml
+server:
+  port: 8082
+
 spring:
-  profiles:
-    active: prod
-  ai:
-    openai:
-      api-key: ${OPENAI_API_KEY}
-      chat:
-        options:
-          model: gpt-4
-          temperature: 0.3
-          max-tokens: 500
+  devtools:
+    restart:
+      enabled: true
+
+ollama:
+  base-url: http://localhost:11434
+  model: qwen:0.5b
 
 logging:
   level:
-    org.springframework.ai: INFO
+    org.example: DEBUG
+```
+
+#### 生产环境 (application-prod.yml)
+```yaml
+server:
+  port: 8082
+
+spring:
+  devtools:
+    restart:
+      enabled: false
+
+ollama:
+  base-url: http://localhost:11434
+  model: qwen:0.5b
+
+logging:
+  level:
     org.example: INFO
-``` 
+  file:
+    name: /var/log/spring-ai-demo/app.log
+```
+
+## Ollama配置
+
+### 安装配置
+
+```bash
+# 下载兼容版本
+wget https://hk.gh-proxy.com/github.com/ollama/ollama/releases/download/v0.1.29/ollama-linux-amd64 -O /tmp/ollama
+chmod +x /tmp/ollama
+mv /tmp/ollama /usr/local/bin/ollama
+
+# 验证安装
+ollama --version
+```
+
+### 服务配置
+
+```bash
+# 启动服务
+ollama serve > /var/log/ollama.log 2>&1 &
+
+# 检查服务状态
+ps aux | grep ollama
+curl -s http://localhost:11434/api/tags
+```
+
+### 模型配置
+
+```bash
+# 下载推荐模型
+ollama pull qwen:0.5b
+
+# 查看可用模型
+ollama list
+
+# 删除不需要的模型
+ollama rm model-name
+```
+
+### 系统服务配置
+
+```bash
+# 创建systemd服务文件
+cat > /etc/systemd/system/ollama.service << EOF
+[Unit]
+Description=Ollama AI Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/local/bin/ollama serve
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/log/ollama.log
+StandardError=append:/var/log/ollama.log
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# 启用服务
+systemctl daemon-reload
+systemctl enable ollama
+systemctl start ollama
+```
+
+## 数据库配置（可选）
+
+### H2数据库（开发环境）
+```yaml
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+```
+
+### MySQL数据库（生产环境）
+```yaml
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/spring_ai_demo?useSSL=false&serverTimezone=UTC
+    username: root
+    password: your-password
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+```
+
+## 安全配置
+
+### 基本安全配置
+```yaml
+spring:
+  security:
+    user:
+      name: admin
+      password: your-password
+    basic:
+      enabled: true
+```
+
+### CORS配置
+```java
+@Configuration
+public class CorsConfig implements WebMvcConfigurer {
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/api/**")
+                .allowedOrigins("*")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
+                .maxAge(3600);
+    }
+}
+```
+
+## 性能配置
+
+### JVM参数优化
+```bash
+# 生产环境JVM参数
+export JAVA_OPTS="-Xmx2g -Xms1g -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
+
+# 启动应用
+java $JAVA_OPTS -jar spring-ai-demo-1.0-SNAPSHOT.jar
+```
+
+### 应用性能配置
+```yaml
+# 连接池配置
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+
+# 缓存配置
+spring:
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=500,expireAfterWrite=600s
+```
+
+## 监控配置
+
+### 健康检查配置
+```yaml
+management:
+  health:
+    ollama:
+      enabled: true
+    defaults:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+```
+
+### 日志监控
+```yaml
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: /var/log/spring-ai-demo/app.log
+    max-size: 100MB
+    max-history: 30
+```
+
+## 部署配置
+
+### Docker配置
+```dockerfile
+FROM openjdk:8-jre-alpine
+COPY target/spring-ai-demo-1.0-SNAPSHOT.jar app.jar
+EXPOSE 8082
+ENTRYPOINT ["java", "-jar", "/app.jar"]
+```
+
+### Docker Compose配置
+```yaml
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - "8082:8082"
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+    depends_on:
+      - ollama
+  
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+volumes:
+  ollama_data:
+```
+
+## 故障排除配置
+
+### 调试配置
+```yaml
+# 启用调试模式
+logging:
+  level:
+    org.example: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.ai: DEBUG
+
+# 启用详细错误信息
+server:
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: always
+```
+
+### 连接超时配置
+```yaml
+# WebClient超时配置
+spring:
+  webflux:
+    client:
+      connect-timeout: 30s
+      read-timeout: 60s
+```
+
+---
+
+**注意**: 根据实际部署环境调整相应的配置参数。 

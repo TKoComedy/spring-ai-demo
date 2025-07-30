@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8082
 
 spring:
   application:
@@ -10,11 +10,16 @@ spring:
     livereload:
       enabled: true
 
-# OpenAI 配置
-openai:
-  api:
-    key: ${OPENAI_API_KEY:your-openai-api-key}
-  model: gpt-3.5-turbo
+# Ollama 配置
+ollama:
+  base-url: http://localhost:11434
+  model: qwen:0.5b
+
+# OpenAI 配置 (注释掉)
+# openai:
+#   api:
+#     key: ${OPENAI_API_KEY:your-openai-api-key}
+#   model: gpt-3.5-turbo
 
 # 日志配置
 logging:

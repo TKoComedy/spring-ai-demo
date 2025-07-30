@@ -1,50 +1,28 @@
 package org.example.service;
 
-import com.theokanning.openai.completion.chat.ChatCompletionRequest;
-import com.theokanning.openai.completion.chat.ChatMessage;
-import com.theokanning.openai.service.OpenAiService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 
 @Service
 public class AiService {
-    @Value("${openai.api.key}")
-    private String apiKey;
-    @Value("${openai.model:gpt-3.5-turbo}")
+    
+    @Value("${ollama.model:deepseek-r1}")
     private String model;
-    private OpenAiService openAiService;
-
-    @PostConstruct
-    public void initOpenAiService() {
-        this.openAiService = new OpenAiService(apiKey, Duration.ofSeconds(60));
-    }
+    
+    @Autowired
+    private OllamaService ollamaService;
 
     public String simpleChat(String message) {
-        ChatCompletionRequest request = ChatCompletionRequest.builder()
-                .model(model)
-                .messages(Arrays.asList(new ChatMessage("user", message)))
-                .maxTokens(1000)
-                .temperature(0.7)
-                .build();
-        return openAiService.createChatCompletion(request).getChoices().get(0).getMessage().getContent();
+        return ollamaService.chat(message);
     }
 
     public String chatWithSystemPrompt(String userMessage, String systemPrompt) {
-        ChatMessage systemMessage = new ChatMessage("system", systemPrompt);
-        ChatMessage userMsg = new ChatMessage("user", userMessage);
-        List<ChatMessage> messages = Arrays.asList(systemMessage, userMsg);
-        ChatCompletionRequest request = ChatCompletionRequest.builder()
-                .model(model)
-                .messages(messages)
-                .maxTokens(1000)
-                .temperature(0.7)
-                .build();
-        return openAiService.createChatCompletion(request).getChoices().get(0).getMessage().getContent();
+        return ollamaService.chatWithSystemPrompt(userMessage, systemPrompt);
     }
 
     public String chatWithTemplate(String topic, String style) {
@@ -53,13 +31,7 @@ public class AiService {
                 "1. 内容要生动有趣\n" +
                 "2. 字数控制在200字左右\n" +
                 "3. 结构清晰";
-        ChatCompletionRequest request = ChatCompletionRequest.builder()
-                .model(model)
-                .messages(Arrays.asList(new ChatMessage("user", template)))
-                .maxTokens(1000)
-                .temperature(0.7)
-                .build();
-        return openAiService.createChatCompletion(request).getChoices().get(0).getMessage().getContent();
+        return ollamaService.chat(template);
     }
 
     /**
@@ -91,27 +63,24 @@ public class AiService {
     }
 
     /**
-     * 图像生成 (使用DALL-E API)
+     * 图像生成 (使用Ollama的文本描述功能)
      */
     public String generateImage(String prompt) {
         try {
-            // 这里需要DALL-E API，暂时返回提示信息
-            // 如果需要完整实现，需要添加DALL-E依赖
-            return "图像生成功能需要DALL-E API。\n" +
-                    "图像描述: " + prompt + "\n" +
-                    "请访问 https://openai.com/dall-e-2 手动生成图像，或添加DALL-E API依赖。";
+            String imagePrompt = "请描述以下图像应该是什么样子：" + prompt + "\n" +
+                    "请详细描述图像的内容、风格、色彩等特征。";
+            return ollamaService.chat(imagePrompt);
         } catch (Exception e) {
-            return "图像生成失败: " + e.getMessage();
+            return "图像描述生成失败: " + e.getMessage();
         }
     }
 
     /**
-     * 文本嵌入 (使用OpenAI Embeddings API)
+     * 文本嵌入 (简化版本，返回模拟数据)
      */
     public List<Double> getEmbedding(String text) {
         try {
-            // 这里需要OpenAI Embeddings API，暂时返回模拟数据
-            // 如果需要完整实现，需要添加embeddings相关依赖
+            // 这里可以调用Ollama的embeddings API，暂时返回模拟数据
             return Arrays.asList(0.1, 0.2, 0.3, 0.4, 0.5);
         } catch (Exception e) {
             return Arrays.asList(0.0, 0.0, 0.0, 0.0, 0.0);
