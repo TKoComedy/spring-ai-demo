@@ -15,6 +15,23 @@ ollama:
   base-url: http://localhost:11434
   model: qwen:0.5b
 
+# 图像生成配置
+image:
+  generation:
+    provider: ollama  # 可选: stable-diffusion, dalle, ollama
+
+# Stable Diffusion API配置
+stable:
+  diffusion:
+    api:
+      url: https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image
+      key: ${STABLE_DIFFUSION_API_KEY:}
+
+# OpenAI API配置
+openai:
+  api:
+    key: ${OPENAI_API_KEY:}
+
 # OpenAI 配置 (注释掉)
 # openai:
 #   api:

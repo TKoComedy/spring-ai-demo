@@ -16,6 +16,9 @@ public class AiService {
     
     @Autowired
     private OllamaService ollamaService;
+    
+    @Autowired
+    private ImageGenerationService imageGenerationService;
 
     public String simpleChat(String message) {
         return ollamaService.chat(message);
@@ -63,15 +66,13 @@ public class AiService {
     }
 
     /**
-     * 图像生成 (使用Ollama的文本描述功能)
+     * 图像生成 (支持多种图像生成服务)
      */
     public String generateImage(String prompt) {
         try {
-            String imagePrompt = "请描述以下图像应该是什么样子：" + prompt + "\n" +
-                    "请详细描述图像的内容、风格、色彩等特征。";
-            return ollamaService.chat(imagePrompt);
+            return imageGenerationService.generateImage(prompt);
         } catch (Exception e) {
-            return "图像描述生成失败: " + e.getMessage();
+            return "图像生成失败: " + e.getMessage();
         }
     }
 

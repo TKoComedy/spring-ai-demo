@@ -17,9 +17,10 @@
 - ✅ 模板化对话
 - ✅ 代码生成
 - ✅ 文档摘要
-- ✅ 图像描述生成
+- ✅ 图像生成（支持多种API）
 - ✅ 文本嵌入（模拟）
 - ✅ 批量嵌入处理
+- ✅ 流式输出（Server-Sent Events）
 - ✅ 健康检查API
 
 ## 快速开始
@@ -84,6 +85,42 @@ Content-Type: application/json
 }
 ```
 
+### 流式输出
+
+#### 流式聊天
+```bash
+POST /api/streaming/chat
+Content-Type: application/json
+Accept: text/event-stream
+
+{
+  "message": "你好，请介绍一下自己"
+}
+```
+
+#### 流式代码生成
+```bash
+POST /api/streaming/generate-code
+Content-Type: application/json
+Accept: text/event-stream
+
+{
+  "requirement": "实现一个简单的计算器",
+  "language": "Java"
+}
+```
+
+#### 流式文档摘要
+```bash
+POST /api/streaming/summarize
+Content-Type: application/json
+Accept: text/event-stream
+
+{
+  "content": "要摘要的文档内容..."
+}
+```
+
 ### 高级功能
 
 #### 代码生成
@@ -107,9 +144,9 @@ Content-Type: application/json
 }
 ```
 
-#### 图像描述
+#### 图像生成
 ```bash
-POST /api/ai/advanced/image
+POST /api/ai/advanced/generate-image
 Content-Type: application/json
 
 {
@@ -191,6 +228,22 @@ journalctl -u spring-ai-demo -f
 # Ollama日志
 tail -f /var/log/ollama.log
 ```
+
+## 测试
+
+启动应用后，可以使用以下方式测试：
+
+1. **浏览器访问**: http://localhost:8082
+2. **流式输出测试**: http://localhost:8082/streaming-test.html
+3. **API测试**: 使用Postman或curl测试各个接口
+4. **健康检查**: http://localhost:8082/api/ai/health
+
+### 流式输出测试
+访问 `http://localhost:8082/streaming-test.html` 可以测试：
+- 流式聊天对话
+- 流式代码生成
+- 流式文档摘要
+- 图像生成功能
 
 ## 开发说明
 
