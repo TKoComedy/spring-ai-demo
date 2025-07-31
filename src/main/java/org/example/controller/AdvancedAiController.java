@@ -24,7 +24,7 @@ public class AdvancedAiController {
     /**
      * 基础聊天 - 流式输出
      */
-    @PostMapping(value = "/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @PostMapping(value = "/chat")
     public Flux<String> chat(@RequestBody Map<String, String> request) {
         String message = request.get("message");
         
@@ -34,10 +34,8 @@ public class AdvancedAiController {
         
         return Flux.create(sink -> {
             try {
-                sink.next("data: {\"type\":\"start\",\"message\":\"" + message + "\"}\n\n");
+                sink.next("data: {\"type\":\"start\",\"message\":\"" + escapeJsonString(message) + "\"}\n\n");
                 ollamaService.streamChat(message, sink);
-                sink.next("data: {\"type\":\"end\"}\n\n");
-                sink.complete();
             } catch (Exception e) {
                 sink.next("data: {\"type\":\"error\",\"message\":\"" + e.getMessage() + "\"}\n\n");
                 sink.complete();
@@ -48,7 +46,7 @@ public class AdvancedAiController {
     /**
      * 带系统提示的聊天 - 流式输出
      */
-    @PostMapping(value = "/chat-with-system", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @PostMapping(value = "/chat-with-system")
     public Flux<String> chatWithSystem(@RequestBody Map<String, String> request) {
         String userMessage = request.get("userMessage");
         String systemPrompt = request.get("systemPrompt");
@@ -59,10 +57,8 @@ public class AdvancedAiController {
         
         return Flux.create(sink -> {
             try {
-                sink.next("data: {\"type\":\"start\",\"userMessage\":\"" + userMessage + "\",\"systemPrompt\":\"" + systemPrompt + "\"}\n\n");
+                sink.next("data: {\"type\":\"start\",\"userMessage\":\"" + escapeJsonString(userMessage) + "\",\"systemPrompt\":\"" + escapeJsonString(systemPrompt) + "\"}\n\n");
                 ollamaService.streamChatWithSystemPrompt(userMessage, systemPrompt, sink);
-                sink.next("data: {\"type\":\"end\"}\n\n");
-                sink.complete();
             } catch (Exception e) {
                 sink.next("data: {\"type\":\"error\",\"message\":\"" + e.getMessage() + "\"}\n\n");
                 sink.complete();
@@ -73,7 +69,7 @@ public class AdvancedAiController {
     /**
      * 模板聊天 - 流式输出
      */
-    @PostMapping(value = "/chat-template", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @PostMapping(value = "/chat-template")
     public Flux<String> chatTemplate(@RequestBody Map<String, String> request) {
         String topic = request.get("topic");
         String style = request.get("style");
@@ -90,10 +86,8 @@ public class AdvancedAiController {
         
         return Flux.create(sink -> {
             try {
-                sink.next("data: {\"type\":\"start\",\"topic\":\"" + topic + "\",\"style\":\"" + style + "\"}\n\n");
+                sink.next("data: {\"type\":\"start\",\"topic\":\"" + escapeJsonString(topic) + "\",\"style\":\"" + escapeJsonString(style) + "\"}\n\n");
                 ollamaService.streamChat(template, sink);
-                sink.next("data: {\"type\":\"end\"}\n\n");
-                sink.complete();
             } catch (Exception e) {
                 sink.next("data: {\"type\":\"error\",\"message\":\"" + e.getMessage() + "\"}\n\n");
                 sink.complete();
@@ -143,7 +137,7 @@ public class AdvancedAiController {
     /**
      * 代码生成 - 流式输出
      */
-    @PostMapping(value = "/generate-code", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @PostMapping(value = "/generate-code")
     public Flux<String> generateCode(@RequestBody Map<String, String> request) {
         String requirement = request.get("requirement");
         String language = request.get("language");
@@ -162,10 +156,8 @@ public class AdvancedAiController {
         
         return Flux.create(sink -> {
             try {
-                sink.next("data: {\"type\":\"start\",\"requirement\":\"" + requirement + "\",\"language\":\"" + language + "\"}\n\n");
+                sink.next("data: {\"type\":\"start\",\"requirement\":\"" + escapeJsonString(requirement) + "\",\"language\":\"" + escapeJsonString(language) + "\"}\n\n");
                 ollamaService.streamChatWithSystemPrompt(userPrompt, systemPrompt, sink);
-                sink.next("data: {\"type\":\"end\"}\n\n");
-                sink.complete();
             } catch (Exception e) {
                 sink.next("data: {\"type\":\"error\",\"message\":\"" + e.getMessage() + "\"}\n\n");
                 sink.complete();
@@ -176,7 +168,7 @@ public class AdvancedAiController {
     /**
      * 文档摘要 - 流式输出
      */
-    @PostMapping(value = "/summarize", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @PostMapping(value = "/summarize")
     public Flux<String> summarize(@RequestBody Map<String, String> request) {
         String content = request.get("content");
         
@@ -194,8 +186,6 @@ public class AdvancedAiController {
             try {
                 sink.next("data: {\"type\":\"start\",\"content_length\":\"" + content.length() + "\"}\n\n");
                 ollamaService.streamChatWithSystemPrompt(content, systemPrompt, sink);
-                sink.next("data: {\"type\":\"end\"}\n\n");
-                sink.complete();
             } catch (Exception e) {
                 sink.next("data: {\"type\":\"error\",\"message\":\"" + e.getMessage() + "\"}\n\n");
                 sink.complete();
@@ -212,5 +202,19 @@ public class AdvancedAiController {
         result.put("status", "高级AI服务正常运行");
         result.put("features", "聊天,嵌入,图像生成,代码生成,文档摘要");
         return result;
+    }
+    
+    /**
+     * 转义JSON字符串中的特殊字符
+     */
+    private String escapeJsonString(String input) {
+        if (input == null) {
+            return "";
+        }
+        return input.replace("\\", "\\\\")
+                   .replace("\"", "\\\"")
+                   .replace("\n", "\\n")
+                   .replace("\r", "\\r")
+                   .replace("\t", "\\t");
     }
 } 

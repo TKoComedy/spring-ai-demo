@@ -128,20 +128,20 @@
                 <div class="card feature-card">
                     <div class="card-header">
                         <h5 class="mb-0">
-                            <i class="fas fa-image me-2"></i>图像生成
+                            <i class="fas fa-image me-2"></i>图像搜索
                         </h5>
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <label for="imagePrompt" class="form-label">图像描述</label>
+                            <label for="imagePrompt" class="form-label">图像搜索关键词</label>
                             <textarea class="form-control" id="imagePrompt" rows="3" 
-                                      placeholder="描述你想要生成的图像..."></textarea>
+                                      placeholder="输入关键词搜索相关图像，支持中文（如：一只猫、风景、花朵）..."></textarea>
                         </div>
                         <button class="btn btn-warning" onclick="generateImage()">
-                            <i class="fas fa-paint-brush me-2"></i>生成图像
+                            <i class="fas fa-search me-2"></i>搜索图像
                         </button>
                         <div class="loading" id="imageLoading">
-                            <i class="fas fa-spinner fa-spin me-2"></i>正在生成图像...
+                            <i class="fas fa-spinner fa-spin me-2"></i>正在搜索图像...
                         </div>
                         <div class="result-area mt-3" id="imageResult"></div>
                     </div>
@@ -235,10 +235,73 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ requirement, language })
             })
-            .then(response => response.json())
-            .then(data => {
+            .then(response => {
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                
                 hideLoading('codeLoading');
-                document.getElementById('codeResult').textContent = data.code;
+                let result = '';
+                const resultElement = document.getElementById('codeResult');
+                resultElement.textContent = '';
+                
+                function readStream() {
+                    reader.read().then(({ done, value }) => {
+                        // 处理当前数据块
+                        if (value) {
+                            const chunk = decoder.decode(value, { stream: true });
+                            const lines = chunk.split('\n');
+                            
+                            lines.forEach(line => {
+                                if (line.startsWith('data: ')) {
+                                    const data = line.substring(6);
+                                    try {
+                                        const json = JSON.parse(data);
+                                        if (json.type === 'chunk') {
+                                            result += json.content;
+                                            resultElement.textContent = result;
+                                        } else if (json.type === 'error') {
+                                            resultElement.textContent = '错误: ' + json.message;
+                                        } else if (json.type === 'start') {
+                                            console.log('Stream started for:', json.message);
+                                        } else if (json.type === 'end') {
+                                            console.log('Stream ended');
+                                        }
+                                    } catch (e) {
+                                        console.error('JSON parse error:', e, 'for data:', data);
+                                    }
+                                }
+                            });
+                        }
+                        
+                        // 如果流结束，处理最后的解码
+                        if (done) {
+                            const finalChunk = decoder.decode();
+                            if (finalChunk) {
+                                const lines = finalChunk.split('\n');
+                                lines.forEach(line => {
+                                    if (line.startsWith('data: ')) {
+                                        const data = line.substring(6);
+                                        try {
+                                            const json = JSON.parse(data);
+                                            if (json.type === 'chunk') {
+                                                result += json.content;
+                                                resultElement.textContent = result;
+                                            }
+                                        } catch (e) {
+                                            console.error('JSON parse error:', e, 'for data:', data);
+                                        }
+                                    }
+                                });
+                            }
+                            return;
+                        }
+                        
+                        // 继续读取
+                        readStream();
+                    });
+                }
+                
+                readStream();
             })
             .catch(error => {
                 hideLoading('codeLoading');
@@ -262,10 +325,73 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ content })
             })
-            .then(response => response.json())
-            .then(data => {
+            .then(response => {
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                
                 hideLoading('summaryLoading');
-                document.getElementById('summaryResult').textContent = data.summary;
+                let result = '';
+                const resultElement = document.getElementById('summaryResult');
+                resultElement.textContent = '';
+                
+                function readStream() {
+                    reader.read().then(({ done, value }) => {
+                        // 处理当前数据块
+                        if (value) {
+                            const chunk = decoder.decode(value, { stream: true });
+                            const lines = chunk.split('\n');
+                            
+                            lines.forEach(line => {
+                                if (line.startsWith('data: ')) {
+                                    const data = line.substring(6);
+                                    try {
+                                        const json = JSON.parse(data);
+                                        if (json.type === 'chunk') {
+                                            result += json.content;
+                                            resultElement.textContent = result;
+                                        } else if (json.type === 'error') {
+                                            resultElement.textContent = '错误: ' + json.message;
+                                        } else if (json.type === 'start') {
+                                            console.log('Stream started for:', json.message);
+                                        } else if (json.type === 'end') {
+                                            console.log('Stream ended');
+                                        }
+                                    } catch (e) {
+                                        console.error('JSON parse error:', e, 'for data:', data);
+                                    }
+                                }
+                            });
+                        }
+                        
+                        // 如果流结束，处理最后的解码
+                        if (done) {
+                            const finalChunk = decoder.decode();
+                            if (finalChunk) {
+                                const lines = finalChunk.split('\n');
+                                lines.forEach(line => {
+                                    if (line.startsWith('data: ')) {
+                                        const data = line.substring(6);
+                                        try {
+                                            const json = JSON.parse(data);
+                                            if (json.type === 'chunk') {
+                                                result += json.content;
+                                                resultElement.textContent = result;
+                                            }
+                                        } catch (e) {
+                                            console.error('JSON parse error:', e, 'for data:', data);
+                                        }
+                                    }
+                                });
+                            }
+                            return;
+                        }
+                        
+                        // 继续读取
+                        readStream();
+                    });
+                }
+                
+                readStream();
             })
             .catch(error => {
                 hideLoading('summaryLoading');
@@ -292,8 +418,33 @@
             .then(response => response.json())
             .then(data => {
                 hideLoading('imageLoading');
-                document.getElementById('imageResult').innerHTML = 
-                    `<img src="${data.imageUrl}" class="img-fluid" alt="生成的图像">`;
+                
+                // 从返回的JSON对象中提取imageUrl字段
+                const imageData = data.imageUrl || data;
+                
+                // 解析返回的文本，查找图像URL
+                const imageUrlMatch = imageData.match(/图像URL: (https?:\/\/[^\s\n]+)/);
+                const largeImageUrlMatch = imageData.match(/高清图像URL: (https?:\/\/[^\s\n]+)/);
+                
+                if (imageUrlMatch) {
+                    const imageUrl = imageUrlMatch[1];
+                    const largeImageUrl = largeImageUrlMatch ? largeImageUrlMatch[1] : imageUrl;
+                    
+                    document.getElementById('imageResult').innerHTML = 
+                        `<div class="mb-3">
+                            <img src="${imageUrl}" class="img-fluid rounded" alt="搜索到的图像" style="max-width: 100%; height: auto;">
+                        </div>
+                        <div class="small text-muted">
+                            <strong>搜索结果:</strong><br>
+                            ${imageData.replace(/\n/g, '<br>')}
+                        </div>`;
+                } else {
+                    document.getElementById('imageResult').innerHTML = 
+                        `<div class="alert alert-info">
+                            <strong>搜索结果:</strong><br>
+                            ${imageData.replace(/\n/g, '<br>')}
+                        </div>`;
+                }
             })
             .catch(error => {
                 hideLoading('imageLoading');
@@ -346,10 +497,73 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ topic, style })
             })
-            .then(response => response.json())
-            .then(data => {
+            .then(response => {
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                
                 hideLoading('templateLoading');
-                document.getElementById('templateResult').textContent = data.response;
+                let result = '';
+                const resultElement = document.getElementById('templateResult');
+                resultElement.textContent = '';
+                
+                function readStream() {
+                    reader.read().then(({ done, value }) => {
+                        // 处理当前数据块
+                        if (value) {
+                            const chunk = decoder.decode(value, { stream: true });
+                            const lines = chunk.split('\n');
+                            
+                            lines.forEach(line => {
+                                if (line.startsWith('data: ')) {
+                                    const data = line.substring(6);
+                                    try {
+                                        const json = JSON.parse(data);
+                                        if (json.type === 'chunk') {
+                                            result += json.content;
+                                            resultElement.textContent = result;
+                                        } else if (json.type === 'error') {
+                                            resultElement.textContent = '错误: ' + json.message;
+                                        } else if (json.type === 'start') {
+                                            console.log('Stream started for:', json.message);
+                                        } else if (json.type === 'end') {
+                                            console.log('Stream ended');
+                                        }
+                                    } catch (e) {
+                                        console.error('JSON parse error:', e, 'for data:', data);
+                                    }
+                                }
+                            });
+                        }
+                        
+                        // 如果流结束，处理最后的解码
+                        if (done) {
+                            const finalChunk = decoder.decode();
+                            if (finalChunk) {
+                                const lines = finalChunk.split('\n');
+                                lines.forEach(line => {
+                                    if (line.startsWith('data: ')) {
+                                        const data = line.substring(6);
+                                        try {
+                                            const json = JSON.parse(data);
+                                            if (json.type === 'chunk') {
+                                                result += json.content;
+                                                resultElement.textContent = result;
+                                            }
+                                        } catch (e) {
+                                            console.error('JSON parse error:', e, 'for data:', data);
+                                        }
+                                    }
+                                });
+                            }
+                            return;
+                        }
+                        
+                        // 继续读取
+                        readStream();
+                    });
+                }
+                
+                readStream();
             })
             .catch(error => {
                 hideLoading('templateLoading');

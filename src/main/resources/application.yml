@@ -18,7 +18,17 @@ ollama:
 # 图像生成配置
 image:
   generation:
-    provider: ollama  # 可选: stable-diffusion, dalle, ollama
+    provider: pixabay  # 可选: stable-diffusion, dalle, unsplash, pixabay, ollama
+
+# Pixabay API配置
+pixabay:
+  api:
+    key: 51553097-1aae0b00d0d99daaae20d1909  # 你的Pixabay API密钥
+
+# Unsplash API配置
+unsplash:
+  api:
+    key: ${UNSPLASH_API_KEY:}  # 可选，不配置也能使用免费搜索
 
 # Stable Diffusion API配置
 stable:

@@ -84,24 +84,35 @@ public class OllamaService {
                     .bodyValue(request)
                     .retrieve()
                     .bodyToFlux(GenerateStreamResponse.class)
+                    .doOnNext(response -> {
+                        // 调试信息
+                        System.out.println("Received response: " + response.getResponse() + ", done: " + response.isDone());
+                    })
                     .subscribe(
                         response -> {
                             if (response.getResponse() != null && !response.getResponse().isEmpty()) {
                                 String jsonChunk = "{\"type\":\"chunk\",\"content\":\"" + 
-                                    response.getResponse().replace("\"", "\\\"") + "\"}";
-                                sink.next(jsonChunk);
+                                    response.getResponse().replace("\"", "\\\"").replace("\n", "\\n") + "\"}";
+                                sink.next("data: " + jsonChunk + "\n\n");
                             }
                         },
                         error -> {
+                            System.err.println("Stream error: " + error.getMessage());
                             String errorJson = "{\"type\":\"error\",\"message\":\"" + error.getMessage() + "\"}";
-                            sink.next(errorJson);
+                            sink.next("data: " + errorJson + "\n\n");
                             sink.complete();
                         },
-                        () -> sink.complete()
+                        () -> {
+                            System.out.println("Stream completed");
+                            // 发送结束标记
+                            sink.next("data: {\"type\":\"end\"}\n\n");
+                            sink.complete();
+                        }
                     );
         } catch (Exception e) {
+            System.err.println("Stream exception: " + e.getMessage());
             String errorJson = "{\"type\":\"error\",\"message\":\"" + e.getMessage() + "\"}";
-            sink.next(errorJson);
+            sink.next("data: " + errorJson + "\n\n");
             sink.complete();
         }
     }
@@ -150,20 +161,24 @@ public class OllamaService {
                         response -> {
                             if (response.getResponse() != null && !response.getResponse().isEmpty()) {
                                 String jsonChunk = "{\"type\":\"chunk\",\"content\":\"" + 
-                                    response.getResponse().replace("\"", "\\\"") + "\"}";
-                                sink.next(jsonChunk);
+                                    response.getResponse().replace("\"", "\\\"").replace("\n", "\\n") + "\"}";
+                                sink.next("data: " + jsonChunk + "\n\n");
                             }
                         },
                         error -> {
                             String errorJson = "{\"type\":\"error\",\"message\":\"" + error.getMessage() + "\"}";
-                            sink.next(errorJson);
+                            sink.next("data: " + errorJson + "\n\n");
                             sink.complete();
                         },
-                        () -> sink.complete()
+                        () -> {
+                            // 发送结束标记
+                            sink.next("data: {\"type\":\"end\"}\n\n");
+                            sink.complete();
+                        }
                     );
         } catch (Exception e) {
             String errorJson = "{\"type\":\"error\",\"message\":\"" + e.getMessage() + "\"}";
-            sink.next(errorJson);
+            sink.next("data: " + errorJson + "\n\n");
             sink.complete();
         }
     }
@@ -194,11 +209,23 @@ public class OllamaService {
     public static class GenerateStreamResponse {
         private String response;
         private boolean done;
+        private String model;
+        private String created_at;
+        private String done_reason;
         
         public String getResponse() { return response; }
         public void setResponse(String response) { this.response = response; }
         
         public boolean isDone() { return done; }
         public void setDone(boolean done) { this.done = done; }
+        
+        public String getModel() { return model; }
+        public void setModel(String model) { this.model = model; }
+        
+        public String getCreated_at() { return created_at; }
+        public void setCreated_at(String created_at) { this.created_at = created_at; }
+        
+        public String getDone_reason() { return done_reason; }
+        public void setDone_reason(String done_reason) { this.done_reason = done_reason; }
     }
 } 

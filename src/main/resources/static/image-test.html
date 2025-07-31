@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图像生成测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            white-space: pre-wrap;
+        }
+        .image-result {
+            margin-top: 20px;
+        }
+        .image-result img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>图像生成测试</h1>
+    
+    <div class="container">
+        <h2>Pixabay 图像搜索</h2>
+        <input type="text" id="imagePrompt" placeholder="输入图像描述，例如：一只猫、美丽的风景、城市夜景..." value="一只猫">
+        <button onclick="generateImage()">搜索图像</button>
+        
+        <div class="result" id="result">结果将显示在这里...</div>
+        <div class="image-result" id="imageResult"></div>
+    </div>
+
+    <script>
+        function generateImage() {
+            const prompt = document.getElementById('imagePrompt').value;
+            const resultDiv = document.getElementById('result');
+            const imageResultDiv = document.getElementById('imageResult');
+            
+            if (!prompt.trim()) {
+                resultDiv.textContent = '请输入图像描述';
+                return;
+            }
+            
+            resultDiv.textContent = '正在搜索图像...';
+            imageResultDiv.innerHTML = '';
+            
+            fetch('/api/advanced-ai/generate-image', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ prompt: prompt })
+            })
+            .then(response => response.json())
+            .then(data => {
+                resultDiv.textContent = data.imageUrl || '未找到图像';
+                
+                // 尝试从返回的文本中提取图像URL
+                const text = data.imageUrl || '';
+                const urlMatch = text.match(/图像URL: (https?:\/\/[^\s\n]+)/);
+                if (urlMatch) {
+                    const imageUrl = urlMatch[1];
+                    imageResultDiv.innerHTML = `
+                        <h3>找到的图像:</h3>
+                        <img src="${imageUrl}" alt="${prompt}" onerror="this.style.display='none'">
+                        <p><a href="${imageUrl}" target="_blank">在新窗口中打开</a></p>
+                    `;
+                }
+            })
+            .catch(error => {
+                resultDiv.textContent = '请求失败: ' + error.message;
+            });
+        }
+        
+        // 页面加载时自动测试
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                generateImage();
+            }, 1000);
+        });
+    </script>
+</body>
+</html> 

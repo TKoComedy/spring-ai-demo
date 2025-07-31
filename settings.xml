@@ -28,7 +28,7 @@ under the License.
   
   <!-- 交互模式 -->
   <interactiveMode>true</interactiveMode>
-  
+
   <!-- 离线模式 -->
   <offline>false</offline>
 
@@ -47,11 +47,11 @@ under the License.
   <!-- 镜像配置 - 使用阿里云镜像加速 -->
   <mirrors>
     <mirror>
-      <id>aliyunmaven</id>
-      <mirrorOf>*</mirrorOf>
-      <name>阿里云公共仓库</name>
-      <url>https://maven.aliyun.com/repository/public</url>
-    </mirror>
+    <id>aliyunmaven</id>
+    <mirrorOf>*</mirrorOf>
+    <name>阿里云公共仓库</name>
+    <url>https://maven.aliyun.com/repository/public</url>
+  </mirror>
   </mirrors>
   
   <!-- 配置文件 -->
@@ -59,14 +59,14 @@ under the License.
     <!-- Java 8 配置 -->
     <profile>
       <id>jdk-1.8</id>
-      <activation>
-        <activeByDefault>true</activeByDefault>
-        <jdk>1.8</jdk>
-      </activation>
+          <activation>
+          <activeByDefault>true</activeByDefault>
+          <jdk>1.8</jdk>
+          </activation>
       <properties>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-        <maven.compiler.compilerVersion>1.8</maven.compiler.compilerVersion>
+          <maven.compiler.source>1.8</maven.compiler.source>
+          <maven.compiler.target>1.8</maven.compiler.target>
+          <maven.compiler.compilerVersion>1.8</maven.compiler.compilerVersion>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
       </properties>

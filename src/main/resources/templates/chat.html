@@ -145,10 +145,66 @@
                     },
                     body: JSON.stringify({ message: message })
                 })
-                .then(response => response.json())
-                .then(data => {
+                .then(response => {
                     hideTypingIndicator();
-                    addMessage(data.response, 'ai');
+                    
+                    // 创建AI消息容器
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'message ai-message';
+                    messageDiv.innerHTML = '<i class="fas fa-robot me-2"></i>';
+                    chatContainer.appendChild(messageDiv);
+                    
+                    // 使用更简单的流式处理
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    let buffer = '';
+                    let aiMessage = '';
+                    
+                    function processStream() {
+                        reader.read().then(({ done, value }) => {
+                            if (done) {
+                                console.log('流结束，最终消息:', aiMessage);
+                                // 确保最终消息显示
+                                messageDiv.innerHTML = '<i class="fas fa-robot me-2"></i>' + aiMessage;
+                                chatContainer.scrollTop = chatContainer.scrollHeight;
+                                return;
+                            }
+                            
+                            // 解码当前块并添加到缓冲区
+                            const chunk = decoder.decode(value, { stream: true });
+                            buffer += chunk;
+                            console.log('收到数据块:', chunk);
+                            
+                            // 处理完整的行
+                            const lines = buffer.split('\n');
+                            buffer = lines.pop() || ''; // 保留不完整的行
+                            
+                            lines.forEach(line => {
+                                if (line.startsWith('data: ')) {
+                                    const data = line.substring(6);
+                                    try {
+                                        const json = JSON.parse(data);
+                                        if (json.type === 'chunk') {
+                                            aiMessage += json.content;
+                                            messageDiv.innerHTML = '<i class="fas fa-robot me-2"></i>' + aiMessage;
+                                            chatContainer.scrollTop = chatContainer.scrollHeight;
+                                            console.log('累积消息:', aiMessage);
+                                        }
+                                    } catch (e) {
+                                        console.error('JSON解析错误:', e);
+                                    }
+                                }
+                            });
+                            
+                            // 继续读取
+                            processStream();
+                        }).catch(error => {
+                            console.error('读取错误:', error);
+                            messageDiv.innerHTML = '<i class="fas fa-robot me-2"></i>读取错误: ' + error.message;
+                        });
+                    }
+                    
+                    processStream();
                 })
                 .catch(error => {
                     hideTypingIndicator();

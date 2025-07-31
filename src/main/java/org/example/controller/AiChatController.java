@@ -16,7 +16,7 @@ public class AiChatController {
     @Autowired
     private OllamaService ollamaService;
 
-    @PostMapping(value = "/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @PostMapping(value = "/chat")
     public Flux<String> chat(@RequestBody Map<String, String> request) {
         String message = request.get("message");
         
@@ -26,15 +26,8 @@ public class AiChatController {
         
         return Flux.create(sink -> {
             try {
-                // 发送开始标记
-                sink.next("data: {\"type\":\"start\",\"message\":\"" + message + "\"}\n\n");
-                
-                // 调用Ollama的流式API
+                // 直接调用Ollama的流式API，不发送额外的开始标记
                 ollamaService.streamChat(message, sink);
-                
-                // 发送结束标记
-                sink.next("data: {\"type\":\"end\"}\n\n");
-                sink.complete();
             } catch (Exception e) {
                 sink.next("data: {\"type\":\"error\",\"message\":\"" + e.getMessage() + "\"}\n\n");
                 sink.complete();
