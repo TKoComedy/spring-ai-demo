@@ -30,4 +30,10 @@ public class WebController {
         model.addAttribute("title", "AI 功能演示");
         return "demo";
     }
+
+    @GetMapping("/bid-generator")
+    public String bidGenerator(Model model) {
+        model.addAttribute("title", "标书生成器");
+        return "bid-generator";
+    }
 } 

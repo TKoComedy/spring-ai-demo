@@ -13,16 +13,40 @@
             padding: 100px 0;
         }
         .feature-card {
-            transition: transform 0.3s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
             border: none;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            height: 100%;
         }
         .feature-card:hover {
             transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
         }
         .feature-icon {
             font-size: 3rem;
             color: #667eea;
+            margin-bottom: 1rem;
+        }
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        .nav-link {
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+        .nav-link:hover {
+            color: #667eea !important;
+        }
+        .btn-hero {
+            transition: all 0.3s ease;
+            font-weight: 600;
+            padding: 12px 24px;
+            margin: 5px;
+        }
+        .btn-hero:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
         }
     </style>
 </head>
@@ -47,6 +71,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="/demo">演示</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/bid-generator">标书生成</a>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -59,20 +86,25 @@
                 <i class="fas fa-brain me-3"></i>Spring AI 学习项目
             </h1>
             <p class="lead mb-5">探索 Spring AI 的强大功能，从基础聊天到高级AI应用</p>
-            <div class="row">
-                <div class="col-md-4">
-                    <a href="/chat" class="btn btn-light btn-lg me-3">
+            <div class="row justify-content-center">
+                <div class="col-md-3 mb-3">
+                    <a href="/chat" class="btn btn-light btn-hero w-100">
                         <i class="fas fa-comments me-2"></i>开始聊天
                     </a>
                 </div>
-                <div class="col-md-4">
-                    <a href="/advanced" class="btn btn-outline-light btn-lg me-3">
+                <div class="col-md-3 mb-3">
+                    <a href="/advanced" class="btn btn-outline-light btn-hero w-100">
                         <i class="fas fa-magic me-2"></i>高级功能
                     </a>
                 </div>
-                <div class="col-md-4">
-                    <a href="/demo" class="btn btn-outline-light btn-lg">
+                <div class="col-md-3 mb-3">
+                    <a href="/demo" class="btn btn-outline-light btn-hero w-100">
                         <i class="fas fa-play me-2"></i>功能演示
+                    </a>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <a href="/bid-generator" class="btn btn-outline-light btn-hero w-100">
+                        <i class="fas fa-file-contract me-2"></i>标书生成
                     </a>
                 </div>
             </div>
@@ -80,61 +112,79 @@
     </section>
 
     <!-- 功能特性 -->
-    <section class="py-5">
+    <section class="py-5 bg-light">
         <div class="container">
             <h2 class="text-center mb-5">Spring AI 核心功能</h2>
             <div class="row">
-                <div class="col-md-4 mb-4">
-                    <div class="card feature-card h-100">
-                        <div class="card-body text-center">
+                <div class="col-md-3 mb-4">
+                    <div class="card feature-card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center d-flex flex-column justify-content-center align-items-center">
                             <i class="fas fa-comments feature-icon mb-3"></i>
-                            <h5 class="card-title">智能聊天</h5>
-                            <p class="card-text">与AI进行自然语言对话，支持多种AI模型</p>
+                            <h5 class="card-title fw-bold">智能聊天</h5>
+                            <p class="card-text text-muted">与AI进行自然语言对话，支持多种AI模型</p>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4 mb-4">
-                    <div class="card feature-card h-100">
-                        <div class="card-body text-center">
+                <div class="col-md-3 mb-4">
+                    <div class="card feature-card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center d-flex flex-column justify-content-center align-items-center">
                             <i class="fas fa-code feature-icon mb-3"></i>
-                            <h5 class="card-title">代码生成</h5>
-                            <p class="card-text">根据需求自动生成高质量代码</p>
+                            <h5 class="card-title fw-bold">代码生成</h5>
+                            <p class="card-text text-muted">根据需求自动生成高质量代码</p>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4 mb-4">
-                    <div class="card feature-card h-100">
-                        <div class="card-body text-center">
+                <div class="col-md-3 mb-4">
+                    <div class="card feature-card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center d-flex flex-column justify-content-center align-items-center">
                             <i class="fas fa-image feature-icon mb-3"></i>
-                            <h5 class="card-title">图像搜索</h5>
-                            <p class="card-text">基于关键词搜索高质量图像</p>
+                            <h5 class="card-title fw-bold">图像搜索</h5>
+                            <p class="card-text text-muted">基于关键词搜索高质量图像</p>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4 mb-4">
-                    <div class="card feature-card h-100">
-                        <div class="card-body text-center">
+                <div class="col-md-3 mb-4">
+                    <div class="card feature-card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center d-flex flex-column justify-content-center align-items-center">
                             <i class="fas fa-search feature-icon mb-3"></i>
-                            <h5 class="card-title">文本嵌入</h5>
-                            <p class="card-text">将文本转换为向量表示</p>
+                            <h5 class="card-title fw-bold">文本嵌入</h5>
+                            <p class="card-text text-muted">将文本转换为向量表示</p>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4 mb-4">
-                    <div class="card feature-card h-100">
-                        <div class="card-body text-center">
+                <div class="col-md-3 mb-4">
+                    <div class="card feature-card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center d-flex flex-column justify-content-center align-items-center">
                             <i class="fas fa-file-alt feature-icon mb-3"></i>
-                            <h5 class="card-title">文档摘要</h5>
-                            <p class="card-text">自动提取文档关键信息</p>
+                            <h5 class="card-title fw-bold">文档摘要</h5>
+                            <p class="card-text text-muted">自动提取文档关键信息</p>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4 mb-4">
-                    <div class="card feature-card h-100">
-                        <div class="card-body text-center">
+                <div class="col-md-3 mb-4">
+                    <div class="card feature-card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center d-flex flex-column justify-content-center align-items-center">
                             <i class="fas fa-cogs feature-icon mb-3"></i>
-                            <h5 class="card-title">模板系统</h5>
-                            <p class="card-text">灵活的提示模板管理</p>
+                            <h5 class="card-title fw-bold">模板系统</h5>
+                            <p class="card-text text-muted">灵活的提示模板管理</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="card feature-card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center d-flex flex-column justify-content-center align-items-center">
+                            <i class="fas fa-file-contract feature-icon mb-3"></i>
+                            <h5 class="card-title fw-bold">标书生成</h5>
+                            <p class="card-text text-muted">智能生成高质量标书文档</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="card feature-card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center d-flex flex-column justify-content-center align-items-center">
+                            <i class="fas fa-database feature-icon mb-3"></i>
+                            <h5 class="card-title fw-bold">知识库</h5>
+                            <p class="card-text text-muted">智能知识管理和检索</p>
                         </div>
                     </div>
                 </div>

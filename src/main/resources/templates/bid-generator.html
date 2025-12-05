@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>标书生成器</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/all.min.css" rel="stylesheet">
+    <style>
+        .feature-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            border-radius: 0.5rem;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+        }
+        .result-area {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            padding: 15px;
+            min-height: 100px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        .document-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .document-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            margin: -20px -20px 20px -20px;
+            border-radius: 0.5rem 0.5rem 0 0;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .tab-content {
+            display: block;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .nav-tabs .nav-link {
+            border: 1px solid transparent;
+            border-bottom: 3px solid transparent;
+            font-weight: 500;
+            padding: 12px 20px;
+            transition: all 0.3s ease;
+        }
+        .nav-tabs .nav-link.active {
+            background-color: #667eea;
+            color: white;
+            border-bottom: 3px solid #fff;
+            border-radius: 0.375rem 0.375rem 0 0;
+        }
+        .nav-tabs .nav-link:hover:not(.active) {
+            border-color: #dee2e6;
+            background-color: #f8f9fa;
+        }
+        .action-buttons {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        .btn-group-custom {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .btn-group-custom .btn {
+            flex: 1;
+            min-width: 120px;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .btn-group-custom .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 0.5rem;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        .stats-card h3 {
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0.375rem;
+            transition: transform 0.3s ease;
+        }
+        .stat-item:hover {
+            transform: scale(1.05);
+        }
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            display: block;
+        }
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        .form-control, .form-select {
+            border-radius: 0.375rem;
+            border: 1px solid #ced4da;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+        }
+        .card {
+            border-radius: 0.5rem;
+            border: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+        .card-header {
+            border-radius: 0.5rem 0.5rem 0 0 !important;
+            font-weight: 600;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-robot me-2"></i>Spring AI Demo
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/chat">聊天</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/advanced">高级功能</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/demo">演示</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/bid-generator">标书生成</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h2 class="text-center mb-4">
+            <i class="fas fa-file-contract me-2"></i>智能标书生成器
+        </h2>
+
+        <!-- 统计卡片 -->
+        <div class="stats-card">
+            <h3 class="text-center"><i class="fas fa-chart-line me-2"></i>标书生成统计</h3>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-number" id="mainBidCount">0</span>
+                    <span class="stat-label">主标书</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="secondaryBidCount">0</span>
+                    <span class="stat-label">陪标书</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="totalBidCount">0</span>
+                    <span class="stat-label">总标书</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="evaluationCount">0</span>
+                    <span class="stat-label">评估次数</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 标签页导航 -->
+        <ul class="nav nav-tabs mb-4" id="bidTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="input-tab" data-bs-toggle="tab" data-bs-target="#input" type="button" role="tab">标书生成</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="analysis-tab" data-bs-toggle="tab" data-bs-target="#analysis" type="button" role="tab">招标分析</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="outline-tab" data-bs-toggle="tab" data-bs-target="#outline" type="button" role="tab">目录生成</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="section-tab" data-bs-toggle="tab" data-bs-target="#section" type="button" role="tab">章节编写</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="export-tab" data-bs-toggle="tab" data-bs-target="#export" type="button" role="tab">导出设置</button>
+            </li>
+        </ul>
+
+        <!-- 标签页内容 -->
+        <div class="tab-content" id="bidTabContent">
+            <!-- 标书生成标签页 -->
+            <div class="tab-pane fade show active" id="input" role="tabpanel">
+                <!-- 输入区域 -->
+                <div class="card feature-card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-edit me-2"></i>标书信息输入
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="projectInfo" class="form-label">项目信息</label>
+                            <textarea class="form-control" id="projectInfo" rows="3" 
+                                      placeholder="请输入项目基本信息，如项目名称、招标单位、项目规模、预算金额等..."></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="requirements" class="form-label">标书要求</label>
+                            <textarea class="form-control" id="requirements" rows="5" 
+                                      placeholder="请输入标书的具体要求，如技术要求、商务要求、评分标准等..."></textarea>
+                        </div>
+                        <div class="btn-group-custom">
+                            <button class="btn btn-primary" onclick="generateMainBid()">
+                                <i class="fas fa-star me-2"></i>生成主标书
+                            </button>
+                            <button class="btn btn-success" onclick="generateSecondaryBid()">
+                                <i class="fas fa-check-circle me-2"></i>生成陪标书
+                            </button>
+                            <button class="btn btn-info" onclick="generateMultipleSecondaryBids()">
+                                <i class="fas fa-copy me-2"></i>批量生成陪标书
+                            </button>
+                        </div>
+                        <div class="mt-3">
+                            <label for="secondaryCount" class="form-label">陪标书数量：</label>
+                            <input type="number" class="form-control d-inline-block w-auto" id="secondaryCount" min="1" max="10" value="3" style="width: 100px;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 加载状态 -->
+                <div class="loading" id="mainBidLoading">
+                    <i class="fas fa-spinner fa-spin me-2"></i>正在生成主标书...
+                </div>
+                <div class="loading" id="secondaryBidLoading">
+                    <i class="fas fa-spinner fa-spin me-2"></i>正在生成陪标书...
+                </div>
+                <div class="loading" id="multipleSecondaryBidsLoading">
+                    <i class="fas fa-spinner fa-spin me-2"></i>正在批量生成陪标书...
+                </div>
+
+                <!-- 结果展示区域 -->
+                <div id="resultsContainer">
+                    <!-- 主标书结果 -->
+                    <div class="document-section" id="mainBidSection" style="display: none;">
+                        <div class="document-header">
+                            <div>
+                                <i class="fas fa-star me-2 text-warning"></i>主标书（追求最高评分）
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-light" onclick="toggleEvaluation('mainBidEvaluation')">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="result-area" id="mainBidResult"></div>
+                        <div class="action-buttons">
+                            <div class="btn-group-custom">
+                                <button class="btn btn-sm btn-outline-primary" onclick="evaluateMainBid()">
+                                    <i class="fas fa-chart-bar me-2"></i>评估标书质量
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="downloadMainBid()">
+                                    <i class="fas fa-download me-2"></i>下载标书
+                                </button>
+                                <button class="btn btn-sm btn-outline-info" onclick="exportMainBid()">
+                                    <i class="fas fa-file-export me-2"></i>导出标书
+                                </button>
+                            </div>
+                        </div>
+                        <div class="result-area mt-2" id="mainBidEvaluation" style="display: none;"></div>
+                    </div>
+
+                    <!-- 陪标书结果 -->
+                    <div class="document-section" id="secondaryBidSection" style="display: none;">
+                        <div class="document-header">
+                            <div>
+                                <i class="fas fa-check-circle me-2 text-success"></i>陪标书（确保及格线以上）
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-light" onclick="toggleEvaluation('secondaryBidEvaluation')">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="result-area" id="secondaryBidResult"></div>
+                        <div class="action-buttons">
+                            <div class="btn-group-custom">
+                                <button class="btn btn-sm btn-outline-primary" onclick="evaluateSecondaryBid()">
+                                    <i class="fas fa-chart-bar me-2"></i>评估标书质量
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="downloadSecondaryBid()">
+                                    <i class="fas fa-download me-2"></i>下载标书
+                                </button>
+                                <button class="btn btn-sm btn-outline-info" onclick="exportSecondaryBid()">
+                                    <i class="fas fa-file-export me-2"></i>导出标书
+                                </button>
+                            </div>
+                        </div>
+                        <div class="result-area mt-2" id="secondaryBidEvaluation" style="display: none;"></div>
+                    </div>
+
+                    <!-- 批量陪标书结果 -->
+                    <div class="document-section" id="multipleSecondaryBidsSection" style="display: none;">
+                        <div class="document-header">
+                            <div>
+                                <i class="fas fa-copy me-2 text-info"></i>批量陪标书
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-light" onclick="toggleAllEvaluations()">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="multipleSecondaryBidsResults"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 招标分析标签页 -->
+            <div class="tab-pane fade" id="analysis" role="tabpanel">
+                <div class="card feature-card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-search me-2"></i>招标文件分析
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="bidDocumentForAnalysis" class="form-label">招标文件内容</label>
+                            <textarea class="form-control" id="bidDocumentForAnalysis" rows="8" 
+                                      placeholder="请输入招标文件内容..."></textarea>
+                        </div>
+                        <div class="btn-group-custom">
+                            <button class="btn btn-primary" onclick="analyzeBidDocument()">
+                                <i class="fas fa-search me-2"></i>智能分析
+                            </button>
+                            <button class="btn btn-success" onclick="identifyRiskPoints()">
+                                <i class="fas fa-exclamation-triangle me-2"></i>风险识别
+                            </button>
+                            <button class="btn btn-info" onclick="extractScoringCriteria()">
+                                <i class="fas fa-star me-2"></i>评分标准提取
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="loading" id="analysisLoading">
+                    <i class="fas fa-spinner fa-spin me-2"></i>正在分析...
+                </div>
+                
+                <div class="document-section" id="analysisResultSection" style="display: none;">
+                    <div class="document-header">
+                        <div>
+                            <i class="fas fa-chart-bar me-2"></i>分析结果
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-light" onclick="toggleAnalysisResult()">
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="result-area" id="analysisResult"></div>
+                </div>
+            </div>
+
+            <!-- 目录生成标签页 -->
+            <div class="tab-pane fade" id="outline" role="tabpanel">
+                <div class="card feature-card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list me-2"></i>智能目录生成
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="bidDocumentForOutline" class="form-label">招标文件内容</label>
+                            <textarea class="form-control" id="bidDocumentForOutline" rows="6" 
+                                      placeholder="请输入招标文件内容..."></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="analysisResultForOutline" class="form-label">分析结果（可选）</label>
+                            <textarea class="form-control" id="analysisResultForOutline" rows="4" 
+                                      placeholder="请输入招标文件分析结果..."></textarea>
+                        </div>
+                        <div class="btn-group-custom">
+                            <button class="btn btn-primary" onclick="generateBidOutline()">
+                                <i class="fas fa-list me-2"></i>生成标书目录
+                            </button>
+                            <button class="btn btn-success" onclick="generateTechnicalOutline()">
+                                <i class="fas fa-cogs me-2"></i>技术标目录
+                            </button>
+                            <button class="btn btn-info" onclick="generateCommercialOutline()">
+                                <i class="fas fa-file-invoice-dollar me-2"></i>商务标目录
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="loading" id="outlineLoading">
+                    <i class="fas fa-spinner fa-spin me-2"></i>正在生成目录...
+                </div>
+                
+                <div class="document-section" id="outlineResultSection" style="display: none;">
+                    <div class="document-header">
+                        <div>
+                            <i class="fas fa-list me-2"></i>目录结果
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-light" onclick="toggleOutlineResult()">
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="result-area" id="outlineResult"></div>
+                    <div class="action-buttons">
+                        <button class="btn btn-sm btn-outline-primary" onclick="customizeOutline()">
+                            <i class="fas fa-edit me-2"></i>自定义调整
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 章节编写标签页 -->
+            <div class="tab-pane fade" id="section" role="tabpanel">
+                <div class="card feature-card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-book me-2"></i>章节点自动编写
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="sectionTitle" class="form-label">章节标题</label>
+                                    <input type="text" class="form-control" id="sectionTitle" placeholder="请输入章节标题">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="sectionRequirements" class="form-label">章节要求</label>
+                                    <textarea class="form-control" id="sectionRequirements" rows="4" 
+                                              placeholder="请输入章节要求..."></textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="bidContext" class="form-label">标书上下文信息</label>
+                                    <textarea class="form-control" id="bidContext" rows="6" 
+                                              placeholder="请输入标书上下文信息..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="btn-group-custom">
+                            <button class="btn btn-primary" onclick="generateSectionContent()">
+                                <i class="fas fa-book me-2"></i>生成章节内容
+                            </button>
+                            <button class="btn btn-success" onclick="generateTechnicalSolution()">
+                                <i class="fas fa-cogs me-2"></i>技术方案
+                            </button>
+                            <button class="btn btn-info" onclick="generateProjectManagement()">
+                                <i class="fas fa-tasks me-2"></i>项目管理
+                            </button>
+                            <button class="btn btn-warning" onclick="generateQualityAssurance()">
+                                <i class="fas fa-shield-alt me-2"></i>质量保证
+                            </button>
+                            <button class="btn btn-danger" onclick="generateAfterSalesService()">
+                                <i class="fas fa-headset me-2"></i>售后服务
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="loading" id="sectionLoading">
+                    <i class="fas fa-spinner fa-spin me-2"></i>正在生成章节...
+                </div>
+                
+                <div class="document-section" id="sectionResultSection" style="display: none;">
+                    <div class="document-header">
+                        <div>
+                            <i class="fas fa-book me-2"></i>章节内容
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-light" onclick="toggleSectionResult()">
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="result-area" id="sectionResult"></div>
+                    <div class="action-buttons">
+                        <div class="btn-group-custom">
+                            <button class="btn btn-sm btn-outline-primary" onclick="optimizeSectionContent()">
+                                <i class="fas fa-sparkles me-2"></i>优化内容
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="downloadSectionContent()">
+                                <i class="fas fa-download me-2"></i>下载章节
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 导出设置标签页 -->
+            <div class="tab-pane fade" id="export" role="tabpanel">
+                <div class="card feature-card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-file-export me-2"></i>导出设置
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="exportFormat" class="form-label">导出格式</label>
+                                    <select class="form-select" id="exportFormat">
+                                        <option value="word">Word文档 (.doc)</option>
+                                        <option value="pdf">PDF文档 (.pdf)</option>
+                                        <option value="html">HTML文档 (.html)</option>
+                                        <option value="text">纯文本 (.txt)</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="templateStyle" class="form-label">模板样式</label>
+                                    <select class="form-select" id="templateStyle">
+                                        <option value="standard">标准样式</option>
+                                        <option value="modern">现代样式</option>
+                                        <option value="professional">专业样式</option>
+                                        <option value="minimal">简约样式</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="fileName" class="form-label">文件名</label>
+                                    <input type="text" class="form-control" id="fileName" placeholder="请输入文件名" value="标书文档">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="coverPageInfo" class="form-label">封面信息</label>
+                                    <textarea class="form-control" id="coverPageInfo" rows="3" 
+                                              placeholder="项目名称:XXX项目
+公司名称:XXX公司"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="btn-group-custom">
+                            <button class="btn btn-primary" onclick="generateCoverPage()">
+                                <i class="fas fa-file me-2"></i>生成封面
+                            </button>
+                            <button class="btn btn-success" onclick="exportBidDocument()">
+                                <i class="fas fa-download me-2"></i>导出标书
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="loading" id="exportLoading">
+                    <i class="fas fa-spinner fa-spin me-2"></i>正在导出...
+                </div>
+                
+                <div class="document-section" id="exportResultSection" style="display: none;">
+                    <div class="document-header">
+                        <div>
+                            <i class="fas fa-file-export me-2"></i>导出结果
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-light" onclick="toggleExportResult()">
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="result-area" id="exportResult"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 统计数据
+        let stats = {
+            mainBidCount: 0,
+            secondaryBidCount: 0,
+            totalBidCount: 0,
+            evaluationCount: 0
+        };
+
+        // 更新统计数据显示
+        function updateStats() {
+            document.getElementById('mainBidCount').textContent = stats.mainBidCount;
+            document.getElementById('secondaryBidCount').textContent = stats.secondaryBidCount;
+            document.getElementById('totalBidCount').textContent = stats.totalBidCount;
+            document.getElementById('evaluationCount').textContent = stats.evaluationCount;
+        }
+
+        // 生成主标书
+        function generateMainBid() {
+            const projectInfo = document.getElementById('projectInfo').value;
+            const requirements = document.getElementById('requirements').value;
+            
+            if (!projectInfo.trim()) {
+                alert('请输入项目信息');
+                return;
+            }
+            
+            if (!requirements.trim()) {
+                alert('请输入标书要求');
+                return;
+            }
+
+            showLoading('mainBidLoading');
+            hideSection('mainBidSection');
+            
+            fetch('/api/bid-document/generate-main', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ projectInfo, requirements })
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading('mainBidLoading');
+                document.getElementById('mainBidResult').textContent = data.bidDocument;
+                showSection('mainBidSection');
+                
+                // 更新统计
+                stats.mainBidCount++;
+                stats.totalBidCount++;
+                updateStats();
+            })
+            .catch(error => {
+                hideLoading('mainBidLoading');
+                alert('生成主标书失败：' + error.message);
+            });
+        }
+
+        // 生成陪标书
+        function generateSecondaryBid() {
+            const projectInfo = document.getElementById('projectInfo').value;
+            const requirements = document.getElementById('requirements').value;
+            
+            if (!projectInfo.trim()) {
+                alert('请输入项目信息');
+                return;
+            }
+            
+            if (!requirements.trim()) {
+                alert('请输入标书要求');
+                return;
+            }
+
+            showLoading('secondaryBidLoading');
+            hideSection('secondaryBidSection');
+            
+            fetch('/api/bid-document/generate-secondary', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ projectInfo, requirements })
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading('secondaryBidLoading');
+                document.getElementById('secondaryBidResult').textContent = data.bidDocument;
+                showSection('secondaryBidSection');
+                
+                // 更新统计
+                stats.secondaryBidCount++;
+                stats.totalBidCount++;
+                updateStats();
+            })
+            .catch(error => {
+                hideLoading('secondaryBidLoading');
+                alert('生成陪标书失败：' + error.message);
+            });
+        }
+
+        // 批量生成陪标书
+        function generateMultipleSecondaryBids() {
+            const projectInfo = document.getElementById('projectInfo').value;
+            const requirements = document.getElementById('requirements').value;
+            const count = parseInt(document.getElementById('secondaryCount').value);
+            
+            if (!projectInfo.trim()) {
+                alert('请输入项目信息');
+                return;
+            }
+            
+            if (!requirements.trim()) {
+                alert('请输入标书要求');
+                return;
+            }
+            
+            if (isNaN(count) || count <= 0) {
+                alert('陪标书数量必须大于0');
+                return;
+            }
+
+            showLoading('multipleSecondaryBidsLoading');
+            hideSection('multipleSecondaryBidsSection');
+            
+            fetch('/api/bid-document/generate-multiple-secondary', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ projectInfo, requirements, count })
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading('multipleSecondaryBidsLoading');
+                
+                const container = document.getElementById('multipleSecondaryBidsResults');
+                container.innerHTML = '';
+                
+                data.bidDocuments.forEach((doc, index) => {
+                    const docDiv = document.createElement('div');
+                    docDiv.className = 'document-section';
+                    docDiv.innerHTML = `
+                        <div class="document-header">
+                            <i class="fas fa-file-alt me-2"></i>陪标书 #${index + 1}
+                        </div>
+                        <div class="result-area">${doc}</div>
+                        <div class="mt-3">
+                            <button class="btn btn-sm btn-outline-primary" onclick="evaluateBid(this, ${index})">
+                                <i class="fas fa-chart-bar me-2"></i>评估质量
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary ms-2" onclick="downloadBid(${index})">
+                                <i class="fas fa-download me-2"></i>下载
+                            </button>
+                        </div>
+                        <div class="result-area mt-2" id="evaluation-${index}" style="display: none;"></div>
+                    `;
+                    container.appendChild(docDiv);
+                });
+                
+                showSection('multipleSecondaryBidsSection');
+                
+                // 更新统计
+                stats.secondaryBidCount += count;
+                stats.totalBidCount += count;
+                updateStats();
+            })
+            .catch(error => {
+                hideLoading('multipleSecondaryBidsLoading');
+                alert('批量生成陪标书失败：' + error.message);
+            });
+        }
+
+        // 评估主标书质量
+        function evaluateMainBid() {
+            const bidDocument = document.getElementById('mainBidResult').textContent;
+            
+            if (!bidDocument.trim()) {
+                alert('标书内容为空');
+                return;
+            }
+            
+            const evaluationElement = document.getElementById('mainBidEvaluation');
+            evaluationElement.style.display = 'block';
+            evaluationElement.textContent = '正在评估...';
+            
+            fetch('/api/bid-document/evaluate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bidDocument })
+            })
+            .then(response => response.json())
+            .then(data => {
+                evaluationElement.textContent = data.evaluation;
+                
+                // 更新统计
+                stats.evaluationCount++;
+                updateStats();
+            })
+            .catch(error => {
+                evaluationElement.textContent = '评估失败：' + error.message;
+            });
+        }
+
+        // 评估陪标书质量
+        function evaluateSecondaryBid() {
+            const bidDocument = document.getElementById('secondaryBidResult').textContent;
+            
+            if (!bidDocument.trim()) {
+                alert('标书内容为空');
+                return;
+            }
+            
+            const evaluationElement = document.getElementById('secondaryBidEvaluation');
+            evaluationElement.style.display = 'block';
+            evaluationElement.textContent = '正在评估...';
+            
+            fetch('/api/bid-document/evaluate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bidDocument })
+            })
+            .then(response => response.json())
+            .then(data => {
+                evaluationElement.textContent = data.evaluation;
+                
+                // 更新统计
+                stats.evaluationCount++;
+                updateStats();
+            })
+            .catch(error => {
+                evaluationElement.textContent = '评估失败：' + error.message;
+            });
+        }
+
+        // 评估指定标书质量
+        function evaluateBid(button, index) {
+            const section = button.closest('.document-section');
+            const bidDocument = section.querySelector('.result-area').textContent;
+            const evaluationElement = document.getElementById(`evaluation-${index}`);
+            
+            if (!bidDocument.trim()) {
+                alert('标书内容为空');
+                return;
+            }
+            
+            evaluationElement.style.display = 'block';
+            evaluationElement.textContent = '正在评估...';
+            
+            fetch('/api/bid-document/evaluate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bidDocument })
+            })
+            .then(response => response.json())
+            .then(data => {
+                evaluationElement.textContent = data.evaluation;
+                
+                // 更新统计
+                stats.evaluationCount++;
+                updateStats();
+            })
+            .catch(error => {
+                evaluationElement.textContent = '评估失败：' + error.message;
+            });
+        }
+
+        // 下载主标书
+        function downloadMainBid() {
+            const content = document.getElementById('mainBidResult').textContent;
+            downloadContent(content, '主标书.txt');
+        }
+
+        // 下载陪标书
+        function downloadSecondaryBid() {
+            const content = document.getElementById('secondaryBidResult').textContent;
+            downloadContent(content, '陪标书.txt');
+        }
+
+        // 下载指定标书
+        function downloadBid(index) {
+            const section = document.querySelectorAll('.document-section')[index + 2]; // +2 because first two sections are main and secondary
+            const content = section.querySelector('.result-area').textContent;
+            downloadContent(content, `陪标书-${index + 1}.txt`);
+        }
+
+        // 下载内容为文件
+        function downloadContent(content, filename) {
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // 显示加载状态
+        function showLoading(elementId) {
+            document.getElementById(elementId).style.display = 'block';
+        }
+
+        // 隐藏加载状态
+        function hideLoading(elementId) {
+            document.getElementById(elementId).style.display = 'none';
+        }
+
+        // 显示区域
+        function showSection(elementId) {
+            document.getElementById(elementId).style.display = 'block';
+        }
+
+        // 隐藏区域
+        function hideSection(elementId) {
+            document.getElementById(elementId).style.display = 'none';
+        }
+
+        // 切换评估结果显示
+        function toggleEvaluation(elementId) {
+            const element = document.getElementById(elementId);
+            const icon = event.target;
+            if (element.style.display === 'none') {
+                element.style.display = 'block';
+                icon.className = 'fas fa-chevron-up';
+            } else {
+                element.style.display = 'none';
+                icon.className = 'fas fa-chevron-down';
+            }
+        }
+
+        // 切换所有评估结果显示
+        function toggleAllEvaluations() {
+            const evaluations = document.querySelectorAll('[id^="evaluation-"]');
+            const icon = event.target;
+            let allVisible = true;
+            
+            evaluations.forEach(el => {
+                if (el.style.display === 'none') {
+                    allVisible = false;
+                }
+            });
+            
+            evaluations.forEach(el => {
+                el.style.display = allVisible ? 'none' : 'block';
+            });
+            
+            icon.className = allVisible ? 'fas fa-chevron-down' : 'fas fa-chevron-up';
+        }
+
+        // 切换分析结果显示
+        function toggleAnalysisResult() {
+            const element = document.getElementById('analysisResult');
+            const icon = event.currentTarget.querySelector('i');
+            if (element.style.display === 'none') {
+                element.style.display = 'block';
+                icon.className = 'fas fa-chevron-up';
+            } else {
+                element.style.display = 'none';
+                icon.className = 'fas fa-chevron-down';
+            }
+        }
+
+        // 切换目录结果显示
+        function toggleOutlineResult() {
+            const element = document.getElementById('outlineResult');
+            const icon = event.currentTarget.querySelector('i');
+            if (element.style.display === 'none') {
+                element.style.display = 'block';
+                icon.className = 'fas fa-chevron-up';
+            } else {
+                element.style.display = 'none';
+                icon.className = 'fas fa-chevron-down';
+            }
+        }
+
+        // 切换章节结果显示
+        function toggleSectionResult() {
+            const element = document.getElementById('sectionResult');
+            const icon = event.currentTarget.querySelector('i');
+            if (element.style.display === 'none') {
+                element.style.display = 'block';
+                icon.className = 'fas fa-chevron-up';
+            } else {
+                element.style.display = 'none';
+                icon.className = 'fas fa-chevron-down';
+            }
+        }
+
+        // 切换导出结果显示
+        function toggleExportResult() {
+            const element = document.getElementById('exportResult');
+            const icon = event.currentTarget.querySelector('i');
+            if (element.style.display === 'none') {
+                element.style.display = 'block';
+                icon.className = 'fas fa-chevron-up';
+            } else {
+                element.style.display = 'none';
+                icon.className = 'fas fa-chevron-down';
+            }
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStats();
+            
+            // 初始化标签页
+            initTabs();
+        });
+
+        // 初始化标签页功能
+        function initTabs() {
+            // 默认显示第一个标签页内容
+            showTab('input');
+            
+            // 为标签页按钮添加点击事件
+            document.querySelectorAll('[data-bs-toggle="tab"]').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const target = this.getAttribute('data-bs-target').substring(1); // 移除#
+                    showTab(target);
+                });
+            });
+        }
+
+        // 显示指定标签页
+        function showTab(tabId) {
+            // 隐藏所有标签页内容
+            document.querySelectorAll('.tab-pane').forEach(pane => {
+                pane.classList.remove('show', 'active');
+            });
+            
+            // 显示目标标签页
+            const targetPane = document.getElementById(tabId);
+            if (targetPane) {
+                targetPane.classList.add('show', 'active');
+            }
+            
+            // 更新标签页按钮状态
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            // 激活当前标签页按钮
+            const activeButton = document.querySelector(`[data-bs-target="#${tabId}"]`);
+            if (activeButton) {
+                activeButton.classList.add('active');
+            }
+        }
+
+        // 风险识别
+        function identifyRiskPoints() {
+            const bidDocument = document.getElementById('bidDocumentForAnalysis').value;
+            
+            if (!bidDocument.trim()) {
+                alert('请输入招标文件内容');
+                return;
+            }
+
+            showLoading('analysisLoading');
+            hideSection('analysisResultSection');
+            
+            fetch('/api/bid-analysis/identify-risk-points', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bidDocument })
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading('analysisLoading');
+                document.getElementById('analysisResult').textContent = JSON.stringify(data.risks, null, 2);
+                showSection('analysisResultSection');
+                
+                // 更新统计
+                stats.evaluationCount++;
+                updateStats();
+            })
+            .catch(error => {
+                hideLoading('analysisLoading');
+                alert('风险识别失败：' + error.message);
+            });
+        }
+
+        // 评分标准提取
+        function extractScoringCriteria() {
+            const bidDocument = document.getElementById('bidDocumentForAnalysis').value;
+            
+            if (!bidDocument.trim()) {
+                alert('请输入招标文件内容');
+                return;
+            }
+
+            showLoading('analysisLoading');
+            hideSection('analysisResultSection');
+            
+            fetch('/api/bid-analysis/extract-scoring-criteria', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bidDocument })
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading('analysisLoading');
+                document.getElementById('analysisResult').textContent = JSON.stringify(data, null, 2);
+                showSection('analysisResultSection');
+                
+                // 更新统计
+                stats.evaluationCount++;
+                updateStats();
+            })
+            .catch(error => {
+                hideLoading('analysisLoading');
+                alert('评分标准提取失败：' + error.message);
+            });
+        }
+
+        // 智能分析招标文件
+        function analyzeBidDocument() {
+            const bidDocument = document.getElementById('bidDocumentForAnalysis').value;
+            
+            if (!bidDocument.trim()) {
+                alert('请输入招标文件内容');
+                return;
+            }
+
+            showLoading('analysisLoading');
+            hideSection('analysisResultSection');
+            
+            fetch('/api/bid-analysis/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bidDocument })
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading('analysisLoading');
+                document.getElementById('analysisResult').textContent = JSON.stringify(data, null, 2);
+                showSection('analysisResultSection');
+                
+                // 更新统计
+                stats.evaluationCount++;
+                updateStats();
+            })
+            .catch(error => {
+                hideLoading('analysisLoading');
+                alert('分析失败：' + error.message);
+            });
+        }
+    </script>
+</body>
+</html>
